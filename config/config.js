@@ -35,6 +35,6 @@ module.exports = {
         clientID: process.env.CLIENT_ID || '',
         issuer: [`https://sts.windows.net/${tenant}/`, `https://login.microsoftonline.com/${tenant}/v2.0`],
         validateIssuer: true,
-        loggingLevel: process.env.LEVEL || 'debug',
+        loggingLevel: process.env.AD_LEVEL || 'error',
     }
 };

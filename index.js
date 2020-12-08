@@ -46,8 +46,20 @@ app.use(passport.session());
 passport.use('user-authentication', authStrategy);
 
 app.use(function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+
+  // TODO: Don't let everything in in Prod. Testing purposes only.
+  // const whitelist = ['http://localhost:4200', 'http://localhost:3000'];
+  // const host = req.get('host');
+
+  // whitelist.forEach((origin) => {
+  //   if (host.indexOf(origin) > -1) {
+  //     res.header('Access-Control-Allow-Origin', host);
+  //   }
+  // });
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Credentials', true);
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization,X-Requested-With');
 
   // intercept OPTIONS method

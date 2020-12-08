@@ -1,17 +1,34 @@
 const { User } = require('../db');
+const config = require('../config/config');
+const Logger = config.logger;
 
 module.exports = {
     getUsers: async (req, res) => {
-        console.log('session user: ', req.session.userId);
+        const action = 'getUsers';
+        Logger.info(`${new Date().toUTCString()} | ${action} | ${req.ip} | Session User ${req.session.userId}`);
         const users = await User.findAll();
         return res.json(users);
     },
     getUser: async (req, res) => {
         const id = req.params.id;
+        const action = 'getUser';
+        Logger.info(`${new Date().toUTCString()} | ${action} | ${req.ip} | Session User ${req.session.userId}`);
         const user = await User.findOne({ where: { id } });
         return res.json(user);
     },
+    getUserIds: async (req, res) => {
+        const action = 'getUserIds';
+        Logger.info(`${new Date().toUTCString()} | ${action} | ${req.ip} | Session User ${req.session.userId}`);
+        const users = await User.findAll({
+            where: {},
+            attributes: ['id'],
+            raw: true
+        });
+        return res.json((users) ? users.map(user => user.id) : []);
+    },
     addUser: async (req, res) => {
+        const action = 'addUser';
+        Logger.info(`${new Date().toUTCString()} | ${action} | ${req.ip} | Session User ${req.session.userId}`);
         const firstName = (req.body.firstName) ? req.body.firstName : null;
         const lastName = (req.body.lastName) ? req.body.lastName : null;
         const emailAddress = (req.body.emailAddress) ? req.body.emailAddress : null;
@@ -31,6 +48,8 @@ module.exports = {
     },
     updateUser: async (req, res) => {
         const id = req.params.id;
+        const action = 'updateUser';
+        Logger.info(`${new Date().toUTCString()} | ${action} | ${req.ip} | Session User ${req.session.userId}`);
         const user = await User.findOne({ where: { id } });
         if (!user) {
             return res.status(404).json({
@@ -54,13 +73,16 @@ module.exports = {
             updateObject.aadId = req.body.aadId;
         }
 
-        const updatedUser = await User.update(updateObject, { 
+        await User.update(updateObject, { 
             where: { id }
         });
-        return res.json(updatedUser);
+        const fullUpdatedUserRecord = await User.findOne({ where: { id } });
+        return res.json(fullUpdatedUserRecord);
     },
     deleteUser: async (req, res) => {
         const id = req.params.id;
+        const action = 'deleteUser';
+        Logger.info(`${new Date().toUTCString()} | ${action} | ${req.ip} | Session User ${req.session.userId}`);
         const user = await User.findOne({ where: { id } });
         if (!user) {
             return res.status(404).json({
@@ -68,10 +90,10 @@ module.exports = {
             });
         }
 
-        const deletedUser = await User.destroy({
+        await User.destroy({
             where: { id }
         });
 
-        return res.json(deletedUser);
+        return res.json(user);
     }
 }

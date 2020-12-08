@@ -1,5 +1,4 @@
 const { User } = require('../db');
-const passport = require('passport');
 const util = require('../util');
 const config = require('../config/config');
 const Logger = config.logger;
@@ -36,6 +35,7 @@ module.exports = {
       }
 
       req.session.userId = user.id;
+      console.log(req.session.userId);
       Logger.info(`${new Date().toUTCString()} | ${action} | ${req.ip} | User ${user.id}, ${user.emailAddress} with AAD id ${decodedToken.oid} has logged into TOMIS with an authentication token that will expire in ${remainingTime}`);
       return res.json(user);
       },
