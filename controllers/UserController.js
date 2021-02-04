@@ -43,6 +43,15 @@ module.exports = {
                 message: `The following required parameters were missing: ${error.join(', ')}`
             });
         }
+        const userByEmail = await User.findOne({ where: { emailAddress } });
+        if (userByEmail && (                                                // see if userByEmail exists
+                Object.keys(userByEmail).length > 0 ||                      // see if non-empty object returned
+                Array.isArray(userByEmail) && userByEmail.length > 0        // see if non-empty array returned
+        )) {
+            return res.status(400).json({
+                message: `User with email address: ${emailAddress} already exists`
+            });
+        }
         const user = await User.create({ firstName, lastName, emailAddress, aadId});
         return res.json(user);
     },
@@ -53,7 +62,7 @@ module.exports = {
         const user = await User.findOne({ where: { id } });
         if (!user) {
             return res.status(404).json({
-                message: `User: ${id} was not found. Cannot update user.`
+                message: `User: ${id} was not found.`
             });
         }
 
@@ -86,7 +95,7 @@ module.exports = {
         const user = await User.findOne({ where: { id } });
         if (!user) {
             return res.status(404).json({
-                message: `User: ${id} was not found. Cannot delete user.`
+                message: `User: ${id} was not found.`
             });
         }
 

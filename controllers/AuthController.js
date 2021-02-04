@@ -54,7 +54,7 @@ module.exports = {
         // remove the XSRF cookie
         res.clearCookie('XSRF-TOKEN');
         return res.status(200).json({
-            message: `User: ${sessionUser}, has been successfully logged out of the TOMIS application`
+            message: `User: ${sessionUser}, has been successfully logged out of the application`
         });
     }
 }

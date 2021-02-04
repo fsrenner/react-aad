@@ -4,7 +4,9 @@ const expressSession = require('express-session');
 const http = require('http');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
+const YAML = require('yamljs');
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 const passport = require('passport');
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
 
@@ -21,7 +23,10 @@ const Logger = config.logger;
  */
 const authStrategy = new BearerStrategy(config.azure, (token, done) => {
     if (!token) {
-      const message = `The authentication token from Azure Active Directory is invalid or missing. It evaluated to ${JSON.stringify(token)}`;
+      const message = `
+        The authentication token from Azure Active Directory is invalid or missing. 
+        It evaluated to ${JSON.stringify(token)}
+      `;
       console.log(message);
       done(new Error(message));
     } else {
@@ -45,33 +50,41 @@ app.use(passport.initialize());
 app.use(passport.session());
 passport.use('user-authentication', authStrategy);
 
+app.use(
+	'/api/docs',
+	(req, res, next) => {
+    const swaggerDocument = YAML.load('./swagger/swagger.yaml');
+		swaggerDocument.host = req.get('host');
+		req.swaggerDoc = swaggerDocument;
+		next();
+	},
+	swaggerUi.serve,
+	swaggerUi.setup(),
+);
+
 app.use(function (req, res, next) {
+  const whitelist = [
+		'http://localhost:3000',
+		'localhost:3000',
+		'http://localhost:9000',
+		'localhost:9000',
+	];
+  const host = req.headers.origin ? req.headers.origin : req.get('host');
 
-  // TODO: Don't let everything in in Prod. Testing purposes only.
-  // const whitelist = ['http://localhost:4200', 'http://localhost:3000'];
-  // const host = req.get('host');
-
-  // whitelist.forEach((origin) => {
-  //   if (host.indexOf(origin) > -1) {
-  //     res.header('Access-Control-Allow-Origin', host);
-  //   }
-  // });
+  whitelist.forEach((origin) => {
+    if (host.indexOf(origin) > -1) {
+      res.header('Access-Control-Allow-Origin', req.headers.origin);
+    }
+  });
   
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Credentials', true);
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization,X-Requested-With');
 
-  // intercept OPTIONS method
-  if ('OPTIONS' == req.method) {
-    res.sendStatus(200);
-  }
-  else {
-    next();
-  }
+  return ('OPTIONS' == req.method) ? res.sendStatus(200) : next();
 });
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(expressSession(config.session));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, './public/build')));

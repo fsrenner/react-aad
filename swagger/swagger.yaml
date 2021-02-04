@@ -1,0 +1,365 @@
+openapi: 3.0.0
+info:
+  title: React Azure Active Directory API
+  version: 1.0.0
+  description: An Azure Active Directory setup using a React frontend and a Node Express backend
+  contact:
+    name: Steve Renner
+    url: https://github.com/fsrenner
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Status:
+      type: object
+      properties:
+        message:
+          type: string
+          description: the current API status
+          example: "API is running on port: 9000"
+        params:
+          type: object
+          description: Any returned key-value body params passed
+          properties:
+            test:
+              type: string
+              example: test
+        dbLocalTime:
+          type: string
+          description: the current database time
+          example: "09:23:44"
+    User:
+      type: object
+      properties:
+        aadId:
+          type: string
+          description: The Azure Active Directory Id
+          example: "fdc1d8b4-e667-4f9e-853a-0b2fdf742ac6"
+        createdAt:
+          type: string
+          description: The timestamp when the entity was created
+          example: "2020-11-30T16:52:27.011Z"
+        updatedAt:
+          type: string
+          description: The timestamp when the entity was created
+          example: "2020-11-30T16:53:07.409Z"
+        emailAddress:
+          type: string
+          description: The user email address
+          example: "f.steve.renner@gmail.com"
+        firstName:
+          type: string
+          description: The user first name
+          example: "Frederick"
+        lastName:
+          type: string
+          description: The user last name
+          example: "Renner"
+        id:
+          type: number
+          description: The entity id
+          example: 1002
+    Unauthorized:
+      type: object
+      properties:
+        message:
+          type: string
+          description: The reason why the user was unauthorized
+          example: "You are not authorized to access this application"
+    NotLoggedIn:
+      type: object
+      properties:
+        message:
+          type: string
+          description: User not logged in and not passing bearer token
+          example: "Please login in order to access the application"
+    NotFound:
+      type: object
+      properties:
+        message:
+          type: string
+          description: The entity was not found.
+          example: "User: 1002 was not found."
+      
+paths:
+  /status:
+    get:
+      summary: Retrieves the status of the running server
+      parameters:
+        - in: query
+          name: '<any>'
+          description: An optional test parameter
+          schema:
+            type : string
+            example: test
+      operationId: getStatus
+      tags: 
+        - Status
+      responses:
+        '200':
+          description: The status object of the running API and DB timestamp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /login:
+    post:
+      security:
+      - bearerAuth: []  
+      summary: User login endpoint
+      operationId: login
+      tags: 
+        - Authentication
+      responses:
+        '200':
+          description: The logged in user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+  /logout/{id}:
+    post:
+      summary: User logout endpoint
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: the user id of the user logging out
+      operationId: logout
+      tags: 
+        - Authentication
+      responses:
+        '200':
+          description: The logged in user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: the current API status
+                    example: "User: 1002, has been successfully logged out of the application"
+  /v1/users:
+    get:
+      security:
+      - bearerAuth: []  
+      summary: Fetch all users
+      operationId: getUsers
+      tags:
+        - Users
+      responses:
+        '200':
+          description: array of user objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotLoggedIn'
+    post:
+      security:
+      - bearerAuth: []  
+      summary: Create new user
+      operationId: createUser
+      requestBody:
+        description: parameters necessary to create a new user
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailAddress:
+                  type: string
+                  description: The user email address
+                  example: "f.steve.renner@gmail.com"
+                firstName:
+                  type: string
+                  description: The user first name
+                  example: "Frederick"
+                lastName:
+                  type: string
+                  description: The user last name
+                  example: "Renner"
+      tags:
+        - Users
+      responses:
+        '201':
+          description: The created user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotLoggedIn'
+  
+  /v1/users/{id}:
+    get:
+      security:
+      - bearerAuth: []  
+      summary: Fetch user by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: the user id of the user being fetched
+      operationId: getUserById
+      tags:
+        - Users
+      responses:
+        '200':
+          description: The fetched user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotLoggedIn'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    put:
+      security:
+      - bearerAuth: []  
+      summary: Update user by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: the user id of the user being fetched
+      requestBody:
+        description: optional parameters to update the user
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailAddress:
+                  type: string
+                  description: The user email address
+                  example: "f.steve.renner@gmail.com"
+                firstName:
+                  type: string
+                  description: The user first name
+                  example: "Frederick"
+                lastName:
+                  type: string
+                  description: The user last name
+                  example: "Renner"
+      operationId: updateUserById
+      tags:
+        - Users
+      responses:
+        '200':
+          description: The updated user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotLoggedIn'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    delete:
+      security:
+      - bearerAuth: []  
+      summary: Delete user by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: the user id of the user being fetched
+      operationId: deleteUserById
+      tags:
+        - Users
+      responses:
+        '200':
+          description: The deleted user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotLoggedIn'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+  
+  /v1/users/id:
+    get:
+      security:
+      - bearerAuth: []  
+      summary: Fetch all user ids
+      operationId: getUserIds
+      tags:
+        - Users
+      responses:
+        '200':
+          description: array of user ids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  example: 1
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotLoggedIn'
