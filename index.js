@@ -5,7 +5,6 @@ const http = require('http');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const YAML = require('yamljs');
-const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const passport = require('passport');
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
